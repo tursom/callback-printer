@@ -2,10 +2,42 @@ from fastapi import FastAPI, Request
 import uvicorn
 import json
 from datetime import datetime
-from loguru import logger
+import logging
+import logging.handlers
 
-# 配置日志 - 同时输出到控制台和文件
-logger.add("callback.log", rotation="10 MB", retention="10 days", level="INFO")
+# 配置根日志器，确保所有日志都能被捕获
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.StreamHandler(),  # 控制台输出
+        logging.handlers.RotatingFileHandler(
+            "callback.log",
+            maxBytes=10*1024*1024,  # 10MB
+            backupCount=10,
+            encoding='utf-8'
+        )
+    ]
+)
+
+# 获取应用特定的日志器
+logger = logging.getLogger("callback_printer")
+
+# 配置 uvicorn 使用自定义日志器
+# 方法1：禁用 uvicorn 的默认日志配置，让 uvicorn 使用我们配置的根日志器
+uvicorn_logger = logging.getLogger("uvicorn")
+uvicorn_logger.handlers = []  # 清除 uvicorn 默认的处理器
+uvicorn_logger.propagate = True  # 允许日志传播到根日志器
+
+# 同样配置 uvicorn.access 和 uvicorn.error 日志器
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.handlers = []
+uvicorn_access_logger.propagate = True
+
+uvicorn_error_logger = logging.getLogger("uvicorn.error")
+uvicorn_error_logger.handlers = []
+uvicorn_error_logger.propagate = True
 
 app = FastAPI(title="Callback Debug Server", description="用于调试回调请求的服务器")
 
@@ -62,8 +94,8 @@ async def log_request_info(request: Request, call_next):
     
     logger.info("="*80)
     
-    # 记录到文件日志
-    logger.info("请求详情: {}", request_info)
+    # 记录请求详情
+    logger.info(f"请求详情: {request_info}")
     
     # 继续处理请求
     response = await call_next(request)
@@ -79,7 +111,7 @@ async def log_request_info(request: Request, call_next):
     }
     
     logger.info(f"📤 响应 - 状态码: {response.status_code}, 处理时间: {process_time:.3f}s")
-    logger.info("响应详情: {}", response_info)
+    logger.info(f"响应详情: {response_info}")
     
     return response
 
@@ -105,5 +137,7 @@ if __name__ == "__main__":
         app,
         host="0.0.0.0",
         port=8000,
-        log_level="info"
+        log_level="info",
+        log_config=None,  # 禁用 uvicorn 的默认日志配置
+        access_log=True   # 启用访问日志，但使用我们的自定义配置
     )
