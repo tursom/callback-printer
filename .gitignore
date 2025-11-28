@@ -1,0 +1,4 @@
+.venv/
+callback.log
+__pycache__/
+.vscode/
