@@ -30,7 +30,7 @@ async def log_request_info(request: Request, call_next):
     }
     
     # 使用 logger 记录请求信息
-    logger.info("\n" + "="*80)
+    logger.info("="*80)
     logger.info(f"📨 收到请求 - {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info(f"📍 方法: {request.method}")
     logger.info(f"🔗 URL: {request.url}")
@@ -60,7 +60,7 @@ async def log_request_info(request: Request, call_next):
             # 如果不是 JSON，直接输出
             logger.info(request_info['body_content'])
     
-    logger.info("="*80 + "\n")
+    logger.info("="*80)
     
     # 记录到文件日志
     logger.info("请求详情: {}", request_info)
