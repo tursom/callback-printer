@@ -96,20 +96,8 @@ callback-printer/
 
 ## Docker 部署
 
-### 构建镜像
-
-```bash
-docker build -t callback-printer .
-```
-
 ### 运行容器
 
 ```bash
-docker run -d -p 8000:8000 --name callback-printer callback-printer
-```
-
-### 持久化日志（可选）
-
-```bash
-docker run -d -p 8000:8000 -v $(pwd)/callback.log:/app/callback.log --name callback-printer callback-printer
+docker run -d -p 8000:8000 --name callback-printer ghcr.io/tursom/callback-printer:latest
 ```
